@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="../analytics.js"></script>
+<title>Revert Finance — Руслан Насреддинов</title>
+<meta name="description" content="Диапазоны и Fee APR чужих позиций в пулах ликвидности ETH и BTC. Данные Revert, без управления капиталом.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://ruslan-nasreddinov.com/Revert%20Finance/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%230d1b35'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='serif' font-size='18' fill='%23c4a96b'>РН</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
+<style>
+:root{
+  --navy:#0d1b35;--navy-mid:#1a2d52;--accent:#c4a96b;--accent-light:#e8d9b5;--accent-text:#7a5c1e;
+  --text:#111827;--text-mid:#374151;--text-muted:#6b7280;--bg:#f8f7f4;--bg-white:#fff;
+  --border:#e5e3de;--radius:16px;--radius-pill:999px;--shadow:0 10px 28px rgba(13,27,53,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+.skip-link{position:absolute;left:-9999px;top:1rem;z-index:9999;background:var(--navy);color:#fff;padding:.75rem 1.5rem;border-radius:var(--radius-pill);font-size:.875rem;font-weight:500;text-decoration:none}
+.skip-link:focus{left:1rem}
+a{color:inherit}
+nav{position:sticky;top:0;z-index:20;background:rgba(248,247,244,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1200px;margin:0 auto;height:68px;padding:0 5vw;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:600;color:var(--navy);text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:1.6rem;list-style:none}
+.nav-links a{font-size:.75rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);text-decoration:none}
+.nav-links a.active,.nav-links a:hover{color:var(--navy)}
+.nav-cta{background:var(--navy);color:#fff !important;padding:.5rem 1.1rem;border-radius:999px}
+.wrap{max-width:1180px;margin:0 auto;padding:2.4rem 4vw 4rem}
+.eyebrow{font-size:.7rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--accent-text);margin-bottom:.45rem}
+h1{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(2rem,4vw,2.8rem);color:var(--navy);line-height:1.1}
+.lead{max-width:720px;color:var(--text-mid);margin:.7rem 0 1.1rem}
+.spot{color:var(--navy);font-weight:600}
+.tabs{display:flex;flex-wrap:wrap;gap:.6rem;margin:0 0 1.2rem}
+.tab{appearance:none;border:1px solid var(--border);background:var(--bg-white);color:var(--navy);font-family:inherit;font-size:.92rem;font-weight:500;border-radius:999px;padding:.7rem 1.15rem;cursor:pointer;box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:.55rem;text-decoration:none}
+.tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.soon-mark{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-text);background:var(--accent-light);border-radius:999px;padding:.16rem .45rem}
+.filters{display:flex;flex-wrap:wrap;gap:.55rem;align-items:end;margin:0 0 1rem}
+label.f{display:flex;flex-direction:column;gap:.2rem;font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)}
+select,input[type=search]{font:inherit;font-size:.88rem;color:var(--navy);background:#fff;border:1px solid var(--border);border-radius:999px;padding:.45rem .75rem;min-width:0}
+input[type=search]{min-width:140px}
+.check{flex-direction:row;align-items:center;text-transform:none;letter-spacing:0;font-size:.84rem;color:var(--text-mid);gap:.4rem;padding-bottom:.4rem}
+.board{background:#fff;border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);font-weight:600;text-align:left;padding:.75rem .55rem;border-bottom:1px solid var(--border);background:#fbfaf7;white-space:nowrap}
+td{padding:.55rem .55rem;border-bottom:1px solid #f0eee9;font-size:.88rem;vertical-align:middle;white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+th.apr,td.apr{background:#eef6ea;color:#166534;font-weight:650}
+th.apr{background:#e4f0de}
+.group td{background:#f7f3ea;color:var(--navy);font-weight:600;border-bottom:1px solid #eadfca}
+.group b{font-weight:650}
+.group .meta{font-weight:500;color:var(--text-mid);margin-left:.55rem}
+.group .apr{color:#15803d}
+.section td{background:#0d1b35;color:#f8f7f4;font-family:'Cormorant Garamond',serif;font-size:1.2rem;letter-spacing:.01em}
+.plat.uniswap{color:#db2777;font-weight:650}
+.plat.aerodrome{color:#0e7490;font-weight:650}
+.plat.velodrome{color:#e11d48;font-weight:650}
+.fee{display:inline-block;border-radius:999px;padding:.05rem .45rem;background:#f6f3ea;color:var(--accent-text);font-weight:600;font-size:.78rem}
+.dot{display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#16a34a}
+.dot.off{background:#e11d48}
+.links{display:flex;gap:.28rem;justify-content:flex-end}
+.links a{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);border-radius:8px;background:#fff;text-decoration:none}
+.links a img{width:18px;height:18px;display:block;border-radius:4px}
+.links a:hover{border-color:var(--navy);background:#f7f3ea}
+.state{padding:1.4rem 1.1rem;color:var(--text-mid)}
+.foot{margin-top:.9rem;color:var(--text-muted);font-size:.75rem;line-height:1.55}
+.empty-pools{margin-top:.4rem}
+@media(max-width:800px){
+  .nav-links{display:none}
+  .wrap{padding-top:1.6rem}
+}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Перейти к содержимому</a>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">Руслан Насреддинов</a>
+    <ul class="nav-links">
+      <li><a href="../index.html#services">Услуги</a></li>
+      <li><a href="../index.html#about">Обо мне</a></li>
+      <li><a href="../index.html#formats">Форматы</a></li>
+      <li><a class="active" href="../DeFi/index.html">DeFi сервисы</a></li>
+      <li><a class="nav-cta" href="https://t.me/ruslan_nasreddinov" target="_blank" rel="noopener">Записаться</a></li>
+    </ul>
+  </div>
+</nav>
+<main id="main-content" class="wrap">
+  <p class="eyebrow">DeFi сервисы</p>
+  <h1>Revert Finance</h1>
+  <p class="lead" id="lead">Позиции других провайдеров в тех же пулах, что на вкладке «Пулы ликвидности». Диапазоны собраны вокруг текущей цены.</p>
+  <div class="tabs">
+    <a class="tab" href="../DeFi/index.html">Пулы ликвидности</a>
+    <a class="tab active" href="index.html">Revert Finance</a>
+    <a class="tab" href="../DeFi/index.html#soon">Новые сервисы <span class="soon-mark">скоро</span></a>
+  </div>
+  <div class="filters" id="filters" hidden>
+    <label class="f">Категория<select id="f-asset"><option value="ALL">Все</option><option value="BTC">BTC</option><option value="ETH">ETH</option></select></label>
+    <label class="f">Сеть<select id="f-chain"></select></label>
+    <label class="f">Биржа<select id="f-platform"></select></label>
+    <label class="f">Fee tier<select id="f-fee"></select></label>
+    <label class="f">В диапазоне<select id="f-range"><option value="in">Да</option><option value="all">Все около цены</option></select></label>
+    <label class="f">Размер от<select id="f-size"><option value="5000">$5 000</option><option value="15000" selected>$15 000</option><option value="50000">$50 000</option><option value="100000">$100 000</option></select></label>
+    <label class="f">Сортировка<select id="f-sort"><option value="price">По диапазону</option><option value="apr">По Fee APR</option><option value="value">По размеру</option></select></label>
+    <label class="f">Пара<input id="f-q" type="search" placeholder="USDC, WBTC"></label>
+    <label class="check"><input id="f-group" type="checkbox" checked> Группировать диапазоны</label>
+  </div>
+  <section class="board" id="board"><p class="state">Загрузка позиций…</p></section>
+  <p class="foot" id="foot"></p>
+</main>
+<script src="positions-data.js"></script>
+<script>
+(function () {
+  var board = document.getElementById('board');
+  var foot = document.getElementById('foot');
+  var filters = document.getElementById('filters');
+  var data = window.REVERT_RANGES || null;
+
+  function spotText(n) {
+    return '$' + Math.round(Number(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+  function money(n) {
+    var v = Number(n);
+    if (v >= 1000000) return '$' + (v / 1000000).toFixed(2).replace('.', ',') + 'M';
+    if (v >= 1000) {
+      var k = v / 1000;
+      var t = k >= 100 ? String(Math.round(k)) : k.toFixed(1).replace(/\.0$/, '');
+      return '$' + t.replace('.', ',') + 'k';
+    }
+    return '$' + Math.round(v);
+  }
+  function rangeText(lo, hi) {
+    return money(lo) + ' – ' + money(hi);
+  }
+  function pct(n) {
+    if (n == null || n !== n) return '—';
+    return Number(n).toFixed(1).replace('.', ',') + '%';
+  }
+  function age(days) {
+    if (days == null || days !== days) return '—';
+    if (days < 1) return Math.max(1, Math.round(days * 24)) + ' ч';
+    if (days < 14) return (days < 3 ? days.toFixed(1).replace('.', ',') : String(Math.round(days))) + ' д';
+    if (days < 70) return (days / 7).toFixed(1).replace('.', ',') + ' нед';
+    if (days < 365) return Math.max(1, Math.round(days / 30)) + ' мес';
+    return (days / 365).toFixed(1).replace('.', ',') + ' г';
+  }
+  function feeText(tier) {
+    var p = Number(tier) / 10000;
+    return p.toFixed(2).replace('.', ',') + '%';
+  }
+  function cls(name) { return String(name || '').toLowerCase().replace(/[^a-z]/g, ''); }
+  function nearSpot(p) {
+    var s = data.spot[p.asset];
+    if (!s) return true;
+    return p.fullRange || (p.lower <= s * 1.35 && p.upper >= s * 0.7);
+  }
+  function bandSpecs() {
+    return [
+      ['Узкий, у цены', 0.96, 1.04],
+      ['Около цены', 0.92, 1.08],
+      ['Чуть шире', 0.88, 1.14],
+      ['Рабочий', 0.80, 1.25],
+      ['Средний', 0.70, 1.40],
+      ['От 0,5 до 2 цен', 0.50, 2.00],
+      ['Ниже цены', 0.62, 1.00],
+      ['Выше цены', 1.00, 1.50],
+      ['С запасом снизу', 0.40, 1.08],
+      ['С запасом сверху', 0.92, 1.80]
+    ];
+  }
+  function sumValue(items) {
+    return items.reduce(function (s, p) { return s + p.value; }, 0);
+  }
+  function weightedApr(items) {
+    var w = 0, s = 0;
+    items.forEach(function (p) {
+      if (p.feeApr == null) return;
+      w += p.value;
+      s += p.feeApr * p.value;
+    });
+    return w ? s / w : null;
+  }
+  function selected() {
+    return {
+      asset: document.getElementById('f-asset').value,
+      chain: document.getElementById('f-chain').value,
+      platform: document.getElementById('f-platform').value,
+      fee: document.getElementById('f-fee').value,
+      range: document.getElementById('f-range').value,
+      size: Number(document.getElementById('f-size').value),
+      sort: document.getElementById('f-sort').value,
+      q: document.getElementById('f-q').value.trim().toLowerCase(),
+      group: document.getElementById('f-group').checked
+    };
+  }
+  function pass(p, f) {
+    if (f.asset !== 'ALL' && p.asset !== f.asset) return false;
+    if (f.chain !== 'ALL' && p.chain !== f.chain) return false;
+    if (f.platform !== 'ALL' && p.platform !== f.platform) return false;
+    if (f.fee !== 'ALL' && String(p.feeTier) !== f.fee) return false;
+    if (p.value < f.size) return false;
+    if (f.q && p.pair.toLowerCase().indexOf(f.q) === -1 && p.chain.toLowerCase().indexOf(f.q) === -1) return false;
+    if (f.range === 'in' && !p.inRange) return false;
+    if (f.range === 'all' && !nearSpot(p)) return false;
+    return true;
+  }
+  function rowHtml(p) {
+    var links = '<div class="links">';
+    if (p.revertUrl) links += '<a href="' + p.revertUrl + '" target="_blank" rel="noopener" aria-label="Revert" title="Revert"><img src="icon-revert.png" alt=""></a>';
+    if (p.debankUrl) links += '<a href="' + p.debankUrl + '" target="_blank" rel="noopener" aria-label="DeBank" title="DeBank"><img src="icon-debank.png" alt=""></a>';
+    links += '</div>';
+    var range = p.fullRange ? 'полный' : rangeText(p.lower, p.upper);
+    return '<tr>' +
+      '<td>' + p.chain + '</td>' +
+      '<td>' + p.pair + '</td>' +
+      '<td><span class="fee">' + feeText(p.feeTier) + '</span></td>' +
+      '<td>' + range + '</td>' +
+      '<td class="num">' + (p.fullRange ? '—' : pct(p.width)) + '</td>' +
+      '<td class="plat ' + cls(p.platform) + '">' + p.platform + '</td>' +
+      '<td class="num">' + money(p.value) + '</td>' +
+      '<td class="num apr">' + pct(p.feeApr) + '</td>' +
+      '<td>' + age(p.ageDays) + '</td>' +
+      '<td><span class="dot' + (p.inRange ? '' : ' off') + '" title="' + (p.inRange ? 'В диапазоне' : 'Вне диапазона') + '"></span></td>' +
+      '<td>' + links + '</td>' +
+    '</tr>';
+  }
+  function draw() {
+    var f = selected();
+    var list = data.positions.filter(function (p) { return pass(p, f); });
+    if (!list.length) {
+      board.innerHTML = '<p class="state">В этой выборке нет позиций. Ослабьте фильтр размера или включите «Все около цены».</p>';
+      return;
+    }
+    var html = '<div class="table-scroll"><table><thead><tr>' +
+      '<th>Сеть</th><th>Пара</th><th>Fee tier</th><th>Диапазон</th><th class="num">Ширина</th><th>Биржа</th><th class="num">Размер</th><th class="num apr">Fee APR</th><th>Возраст</th><th>Статус</th><th></th>' +
+      '</tr></thead><tbody>';
+    if (!f.group) {
+      var sorted = list.slice();
+      if (f.sort === 'apr') sorted.sort(function (a, b) { return (b.feeApr || -1) - (a.feeApr || -1); });
+      else if (f.sort === 'value') sorted.sort(function (a, b) { return b.value - a.value; });
+      else sorted.sort(function (a, b) {
+        if (a.asset !== b.asset) return a.asset === 'BTC' ? -1 : 1;
+        return a.lower - b.lower;
+      });
+      sorted.slice(0, 200).forEach(function (p) { html += rowHtml(p); });
+    } else {
+      var assets = f.asset === 'ALL' ? ['BTC', 'ETH'] : [f.asset];
+      assets.forEach(function (asset) {
+        var mine = list.filter(function (p) { return p.asset === asset; });
+        if (!mine.length) return;
+        var bands = bandSpecs().map(function (b, i) {
+          var s = data.spot[asset];
+          return { order: i, name: b[0], lower: s * b[1], upper: s * b[2], items: [] };
+        });
+        var wide = [];
+        var rest = [];
+        mine.forEach(function (p) {
+          if (p.fullRange || (p.width && p.width > 160)) { wide.push(p); return; }
+          var best = null, score = 1e9;
+          bands.forEach(function (b) {
+            var sc = Math.abs(Math.log(p.lower / b.lower)) + Math.abs(Math.log(p.upper / b.upper));
+            if (sc < score) { score = sc; best = b; }
+          });
+          if (best && score < 0.4) best.items.push(p);
+          else rest.push(p);
+        });
+        var groups = bands.filter(function (b) { return b.items.length; }).map(function (b) {
+          return { order: b.order, name: b.name, lower: b.lower, upper: b.upper, items: b.items, apr: weightedApr(b.items), value: sumValue(b.items), wide: false };
+        });
+        var extra = {};
+        rest.forEach(function (p) {
+          var step = asset === 'ETH' ? 100 : 2500;
+          var lo = Math.round(p.lower / step) * step;
+          var hi = Math.round(p.upper / step) * step;
+          var k = lo + '|' + hi;
+          if (!extra[k]) extra[k] = { order: 50, name: '', lower: lo, upper: hi, items: [], wide: false };
+          extra[k].items.push(p);
+        });
+        Object.keys(extra).forEach(function (k) {
+          var g = extra[k];
+          if (g.items.length < 2) return;
+          g.apr = weightedApr(g.items);
+          g.value = sumValue(g.items);
+          groups.push(g);
+        });
+        if (wide.length) groups.push({ order: 90, name: 'Очень широкий', lower: 0, upper: 0, items: wide, apr: weightedApr(wide), value: sumValue(wide), wide: true });
+        groups.sort(function (a, b) {
+          if (f.sort === 'apr') return (b.apr || -1) - (a.apr || -1);
+          if (f.sort === 'value') return b.value - a.value;
+          return a.order - b.order;
+        });
+        html += '<tr class="section"><td colspan="11">' + asset + ' · ' + spotText(data.spot[asset]) + '</td></tr>';
+        groups.forEach(function (g) {
+          var label = g.wide ? g.name : (g.name ? g.name + ' · ' + rangeText(g.lower, g.upper) : rangeText(g.lower, g.upper));
+          var apr = g.apr == null ? '' : ' <span class="apr">APR ' + pct(g.apr) + '</span>';
+          html += '<tr class="group"><td colspan="11"><b>' + label + '</b><span class="meta">' + g.items.length + ' поз.</span>' + apr + '</td></tr>';
+          g.items.sort(function (a, b) { return b.value - a.value; });
+          g.items.slice(0, 8).forEach(function (p) { html += rowHtml(p); });
+        });
+      });
+    }
+    html += '</tbody></table></div>';
+    board.innerHTML = html;
+  }
+  function fillSelect(id, values, allLabel) {
+    var el = document.getElementById(id);
+    var html = '<option value="ALL">' + allLabel + '</option>';
+    values.forEach(function (v) { html += '<option value="' + v.value + '">' + v.label + '</option>'; });
+    el.innerHTML = html;
+  }
+  function paintLead() {
+    var eth = data && data.spot && data.spot.ETH;
+    var btc = data && data.spot && data.spot.BTC;
+    document.getElementById('lead').innerHTML = 'Позиции других провайдеров только в пулах с вкладки «Пулы ликвидности». Сейчас BTC <span class="spot">' + spotText(btc) + '</span>, ETH <span class="spot">' + spotText(eth) + '</span>. Показаны диапазоны вокруг этой цены.';
+  }
+  function sanePrice(n, min, max) {
+    return typeof n === 'number' && n === n && n > min && n < max;
+  }
+  function acceptSpot(btc, eth) {
+    if (!data || !data.spot) return;
+    if (!sanePrice(btc, 1000, 10000000) || !sanePrice(eth, 50, 1000000)) return;
+    var moved = Math.abs(data.spot.BTC - btc) >= 0.5 || Math.abs(data.spot.ETH - eth) >= 0.5;
+    data.spot.BTC = btc;
+    data.spot.ETH = eth;
+    paintLead();
+    if (moved && !filters.hidden) draw();
+  }
+  function readLlama(body) {
+    var coins = body && body.coins || {};
+    var btc = coins['coingecko:bitcoin'] && Number(coins['coingecko:bitcoin'].price);
+    var eth = coins['coingecko:ethereum'] && Number(coins['coingecko:ethereum'].price);
+    if (!sanePrice(btc, 1000, 10000000) || !sanePrice(eth, 50, 1000000)) throw new Error('llama');
+    acceptSpot(btc, eth);
+  }
+  function readCoinGecko(body) {
+    var btc = body && body.bitcoin && Number(body.bitcoin.usd);
+    var eth = body && body.ethereum && Number(body.ethereum.usd);
+    if (!sanePrice(btc, 1000, 10000000) || !sanePrice(eth, 50, 1000000)) throw new Error('gecko');
+    acceptSpot(btc, eth);
+  }
+  function refreshSpot(retry) {
+    return fetch('https://coins.llama.fi/prices/current/coingecko:bitcoin,coingecko:ethereum')
+      .then(function (r) { if (!r.ok) throw new Error('llama'); return r.json(); })
+      .then(readLlama)
+      .catch(function () {
+        return fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd')
+          .then(function (r) { if (!r.ok) throw new Error('gecko'); return r.json(); })
+          .then(readCoinGecko);
+      })
+      .catch(function () {
+        if (!retry) setTimeout(function () { refreshSpot(true); }, 20000);
+      });
+  }
+  var spotWatch = false;
+  function watchSpot() {
+    if (spotWatch || !data || !data.spot) return;
+    spotWatch = true;
+    refreshSpot(false);
+    setInterval(function () {
+      if (document.hidden) return;
+      refreshSpot(false);
+    }, 15 * 60 * 1000);
+  }
+  function boot(next) {
+    data = next;
+    if (!data || !data.positions) {
+      board.innerHTML = '<p class="state">Не удалось загрузить позиции Revert. Обновите страницу чуть позже: на диске останется последний успешный снимок, когда он есть.</p>';
+      return;
+    }
+    if (!data.spot) data.spot = { ETH: 0, BTC: 0 };
+    paintLead();
+    var chains = [], platforms = [], fees = [], seenC = {}, seenP = {}, seenF = {};
+    data.positions.forEach(function (p) {
+      if (!seenC[p.chain]) { seenC[p.chain] = 1; chains.push(p.chain); }
+      if (!seenP[p.platform]) { seenP[p.platform] = 1; platforms.push(p.platform); }
+      if (!seenF[p.feeTier]) { seenF[p.feeTier] = 1; fees.push(p.feeTier); }
+    });
+    fillSelect('f-chain', chains.map(function (c) { return { value: c, label: c }; }), 'Все');
+    fillSelect('f-platform', platforms.map(function (c) { return { value: c, label: c }; }), 'Все');
+    fees.sort(function (a, b) { return a - b; });
+    fillSelect('f-fee', fees.map(function (c) { return { value: String(c), label: feeText(c) }; }), 'Все');
+    filters.hidden = false;
+    filters.querySelectorAll('select,input').forEach(function (el) { el.addEventListener('input', draw); el.addEventListener('change', draw); });
+    var missing = (data.pools || []).filter(function (pool) {
+      return !data.positions.some(function (p) { return p.poolId === pool.id; });
+    });
+    var when = data.updated ? data.updated.replace('T', ' ').replace('Z', ' UTC') : '';
+    foot.innerHTML = 'Обновлено: ' + when + '. Fee APR — исторический показатель Revert по уже открытой позиции, это не обещание доходности. В группу попадает до 8 крупнейших позиций. Aerodrome «стейк» и «без стейка» — один и тот же пул. ' +
+      (missing.length ? ('Нет позиций от $5 000: ' + missing.map(function (p) { return p.chain + ' ' + p.name; }).join(', ') + '. ') : '') +
+      'Источник позиций: api.revert.finance. Курс BTC и ETH обновляется при открытии страницы и далее каждые 15 минут. IL и газ не учтены.';
+    draw();
+    watchSpot();
+  }
+
+  var snapshot = window.REVERT_RANGES || null;
+  fetch('/api/revert-ranges').then(function (r) {
+    if (!r.ok) throw new Error('status');
+    return r.json();
+  }).then(function (live) {
+    if (live && live.positions && live.positions.length) boot(live);
+    else if (snapshot) boot(snapshot);
+    else boot(null);
+  }).catch(function () {
+    if (snapshot) boot(snapshot);
+    else boot(null);
+  });
+})();
+</script>
+</body>
+</html>
