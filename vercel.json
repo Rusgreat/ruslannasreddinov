@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/revert-ranges.js": {
+      "maxDuration": 60
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/revert-ranges",
+      "schedule": "15 6 * * *"
+    }
+  ]
+}

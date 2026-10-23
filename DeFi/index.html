@@ -140,6 +140,19 @@ td.worst{background:#4c0519;color:#fb7185;font-weight:700}
 <script src="pools-data.js"></script>
 <script>
 (function () {
+  var data = window.POOLS_DATA;
+  var root = document.getElementById('pools');
+
+  function reportPoolTable() {
+    if (!window.trackEvent) return;
+    if (document.getElementById('panel-pools').hidden) return;
+    if (!data || !data.groups || !root.querySelector('table')) {
+      window.trackEvent('pool_table_error', { table: 'pools', reason: 'missing_data' }, 'pool_table_error');
+      return;
+    }
+    window.trackEvent('pool_table_view', { table: 'pools' }, 'pool_table_view');
+  }
+
   document.querySelectorAll('button.tab').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var soon = btn.id === 'tab-soon';
@@ -149,14 +162,15 @@ td.worst{background:#4c0519;color:#fb7185;font-weight:700}
       document.getElementById('tab-soon').setAttribute('aria-selected', soon ? 'true' : 'false');
       document.getElementById('panel-pools').hidden = soon;
       document.getElementById('panel-soon').hidden = !soon;
+      reportPoolTable();
     });
   });
   if (location.hash === '#soon') document.getElementById('tab-soon').click();
+  if (window.trackEvent) window.trackEvent('defi_section_view', { page: 'pools' }, 'defi_section_view');
 
-  var data = window.POOLS_DATA;
-  var root = document.getElementById('pools');
   if (!data || !data.groups) {
     root.textContent = 'Нет данных по пулам.';
+    reportPoolTable();
     return;
   }
   var meta = {
@@ -233,6 +247,7 @@ td.worst{background:#4c0519;color:#fb7185;font-weight:700}
       ' APR с 01.01 = сумма доходов / 10 000 $ × 365 / число дней. Ончейн-данные, без учёта IL и газа.</p>';
     root.appendChild(board);
   });
+  reportPoolTable();
 })();
 </script>
 </body>

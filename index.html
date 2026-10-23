@@ -1217,6 +1217,7 @@ ${message || 'Не указано'}`;
     });
     const data = await res.json();
     if (data.ok) {
+      if (window.trackEvent) window.trackEvent('feedback_submit', null, 'feedback_submit');
       btn.textContent = 'Заявка отправлена ✓';
       btn.style.background = '#1a2d52';
       document.getElementById('contact-name').value = '';

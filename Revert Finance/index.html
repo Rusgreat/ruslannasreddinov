@@ -121,6 +121,8 @@ th.apr{background:#e4f0de}
   var foot = document.getElementById('foot');
   var filters = document.getElementById('filters');
   var data = window.REVERT_RANGES || null;
+  var tableViewed = false;
+  if (window.trackEvent) window.trackEvent('defi_section_view', { page: 'revert' }, 'defi_section_view');
 
   function spotText(n) {
     return '$' + Math.round(Number(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -307,6 +309,10 @@ th.apr{background:#e4f0de}
     }
     html += '</tbody></table></div>';
     board.innerHTML = html;
+    if (!tableViewed) {
+      tableViewed = true;
+      if (window.trackEvent) window.trackEvent('pool_table_view', { table: 'revert' }, 'pool_table_view');
+    }
   }
   function fillSelect(id, values, allLabel) {
     var el = document.getElementById(id);
@@ -371,8 +377,10 @@ th.apr{background:#e4f0de}
     data = next;
     if (!data || !data.positions) {
       board.innerHTML = '<p class="state">Не удалось загрузить позиции Revert. Обновите страницу чуть позже: на диске останется последний успешный снимок, когда он есть.</p>';
+      boot.failed = true;
       return;
     }
+    boot.failed = false;
     if (!data.spot) data.spot = { ETH: 0, BTC: 0 };
     paintLead();
     var chains = [], platforms = [], fees = [], seenC = {}, seenP = {}, seenF = {};
@@ -386,29 +394,90 @@ th.apr{background:#e4f0de}
     fees.sort(function (a, b) { return a - b; });
     fillSelect('f-fee', fees.map(function (c) { return { value: String(c), label: feeText(c) }; }), 'Все');
     filters.hidden = false;
-    filters.querySelectorAll('select,input').forEach(function (el) { el.addEventListener('input', draw); el.addEventListener('change', draw); });
-    var missing = (data.pools || []).filter(function (pool) {
-      return !data.positions.some(function (p) { return p.poolId === pool.id; });
-    });
-    var when = data.updated ? data.updated.replace('T', ' ').replace('Z', ' UTC') : '';
-    foot.innerHTML = 'Обновлено: ' + when + '. Fee APR — исторический показатель Revert по уже открытой позиции, это не обещание доходности. В группу попадает до 8 крупнейших позиций. Aerodrome «стейк» и «без стейка» — один и тот же пул. ' +
-      (missing.length ? ('Нет позиций от $5 000: ' + missing.map(function (p) { return p.chain + ' ' + p.name; }).join(', ') + '. ') : '') +
-      'Источник позиций: api.revert.finance. Курс BTC и ETH обновляется при открытии страницы и далее каждые 15 минут. IL и газ не учтены.';
+    if (!boot.listeners) {
+      var filterNames = {
+        'f-asset': 'asset',
+        'f-chain': 'chain',
+        'f-platform': 'platform',
+        'f-fee': 'fee',
+        'f-range': 'range',
+        'f-size': 'size',
+        'f-q': 'pair',
+        'f-group': 'group'
+      };
+      var filterSeen = Object.create(null);
+      filters.querySelectorAll('select,input').forEach(function (el) {
+        el.addEventListener('input', draw);
+        el.addEventListener('change', draw);
+        filterSeen[el.id] = el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value;
+        el.addEventListener('change', function (event) {
+          if (!event.isTrusted || !window.trackEvent) return;
+          var current = el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value;
+          if (filterSeen[el.id] === current) return;
+          filterSeen[el.id] = current;
+          if (el.id === 'f-sort') {
+            if (current === 'price' || current === 'apr' || current === 'value') {
+              window.trackEvent('pool_sort_used', { sort: current });
+            }
+            return;
+          }
+          var control = filterNames[el.id];
+          if (!control) return;
+          if (control === 'pair') {
+            window.trackEvent('pool_filter_used', { control: 'pair' });
+            return;
+          }
+          var reported = el.type === 'checkbox' ? (current === '1' ? 'on' : 'off') : current;
+          window.trackEvent('pool_filter_used', { control: control, value: reported });
+        });
+      });
+      boot.listeners = true;
+    }
+    writeFoot();
     draw();
     watchSpot();
   }
+  function writeFoot() {
+    var missing = (data.pools || []).filter(function (pool) {
+      return !data.positions.some(function (p) { return p.poolId === pool.id; });
+    });
+    var when = data.updated ? data.updated.replace('T', ' ').replace(/\.\d+Z$/, 'Z').replace('Z', ' UTC') : '';
+    foot.innerHTML = 'Обновлено: ' + when + '. Fee APR — исторический показатель Revert по уже открытой позиции, это не обещание доходности. В группу попадает до 8 крупнейших позиций. Aerodrome «стейк» и «без стейка» — один и тот же пул. ' +
+      (missing.length ? ('Нет позиций от $5 000: ' + missing.map(function (p) { return p.chain + ' ' + p.name; }).join(', ') + '. ') : '') +
+      'Позиции обновляются раз в сутки. Курс BTC и ETH — при открытии страницы и далее каждые 15 минут. IL и газ не учтены.';
+  }
+  function replacePositions(live) {
+    var spot = data && data.spot;
+    data = live;
+    if (spot && sanePrice(spot.BTC, 1000, 10000000) && sanePrice(spot.ETH, 50, 1000000)) data.spot = spot;
+    paintLead();
+    writeFoot();
+    if (!filters.hidden) draw();
+  }
+
+  function reportLoadError() {
+    if (tableViewed || boot.failed === false || !window.trackEvent) return;
+    window.trackEvent('pool_table_error', { table: 'revert', reason: 'unavailable' }, 'pool_table_error');
+  }
 
   var snapshot = window.REVERT_RANGES || null;
-  fetch('/api/revert-ranges').then(function (r) {
+  if (snapshot) boot(snapshot);
+  var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+  var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
+  fetch('/api/revert-ranges', ctrl ? { signal: ctrl.signal } : {}).then(function (r) {
     if (!r.ok) throw new Error('status');
     return r.json();
   }).then(function (live) {
-    if (live && live.positions && live.positions.length) boot(live);
-    else if (snapshot) boot(snapshot);
-    else boot(null);
+    if (timer) clearTimeout(timer);
+    if (live && live.positions && live.positions.length) {
+      if (snapshot) replacePositions(live);
+      else boot(live);
+    } else if (!snapshot) boot(null);
+    reportLoadError();
   }).catch(function () {
-    if (snapshot) boot(snapshot);
-    else boot(null);
+    if (timer) clearTimeout(timer);
+    if (!snapshot) boot(null);
+    reportLoadError();
   });
 })();
 </script>
