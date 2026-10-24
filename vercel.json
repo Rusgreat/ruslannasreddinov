@@ -9,5 +9,22 @@
       "path": "/api/revert-ranges",
       "schedule": "15 6 * * *"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/Revert Finance",
+      "destination": "/revert",
+      "permanent": true
+    },
+    {
+      "source": "/Revert Finance/",
+      "destination": "/revert/",
+      "permanent": true
+    },
+    {
+      "source": "/Revert Finance/:path*",
+      "destination": "/revert/:path*",
+      "permanent": true
+    }
   ]
 }

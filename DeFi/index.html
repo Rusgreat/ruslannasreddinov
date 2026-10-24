@@ -92,8 +92,18 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 td.best{background:#14532d;color:#4ade80;font-weight:700}
 td.worst{background:#4c0519;color:#fb7185;font-weight:700}
 .foot{margin-top:1rem;color:#8b95a8;font-size:.72rem;line-height:1.55}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.hamburger span{display:block;width:22px;height:1.5px;background:var(--navy);border-radius:2px;transition:transform .25s ease,opacity .2s ease}
+.hamburger[aria-expanded="true"] span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.hamburger[aria-expanded="true"] span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hamburger[aria-expanded="true"] span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+.mobile-menu{display:none;position:fixed;top:68px;left:1rem;right:1rem;background:#fff;border:1px solid var(--border);border-radius:16px;padding:1rem 1.25rem;z-index:30;flex-direction:column;gap:.15rem;box-shadow:var(--shadow)}
+.mobile-menu.active{display:flex}
+.mobile-menu a{font-size:.9rem;color:var(--text-mid);text-decoration:none;font-weight:500;padding:.55rem 0;border-bottom:1px solid var(--border)}
+.mobile-menu a:last-child{border-bottom:none}
 @media(max-width:800px){
   .nav-links{display:none}
+  .hamburger{display:flex}
   .board-top{flex-direction:column}
   .board .ask{text-align:left}
 }
@@ -111,8 +121,39 @@ td.worst{background:#4c0519;color:#fb7185;font-weight:700}
       <li><a class="active" href="index.html">DeFi сервисы</a></li>
       <li><a class="nav-cta" href="https://t.me/ruslan_nasreddinov" target="_blank" rel="noopener">Записаться</a></li>
     </ul>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobileMenu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="../index.html#services">Услуги</a>
+  <a href="../index.html#about">Обо мне</a>
+  <a href="../index.html#formats">Форматы</a>
+  <a href="../index.html#articles">Статьи</a>
+  <a href="index.html">DeFi сервисы</a>
+  <a href="https://t.me/ruslan_nasreddinov" target="_blank" rel="noopener">Записаться на консультацию</a>
+  <a href="https://t.me/m/YgAgsjCKOWQy" target="_blank" rel="noopener">Обмен</a>
+</div>
+<script>
+(function () {
+  var btn = document.getElementById('hamburgerBtn');
+  var menu = document.getElementById('mobileMenu');
+  if (!btn || !menu) return;
+  btn.addEventListener('click', function () {
+    var open = menu.classList.toggle('active');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+  });
+  menu.querySelectorAll('a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      menu.classList.remove('active');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-label', 'Открыть меню');
+    });
+  });
+})();
+</script>
 
 <main id="main-content" class="wrap">
   <p class="eyebrow">DeFi сервисы</p>
@@ -121,12 +162,12 @@ td.worst{background:#4c0519;color:#fb7185;font-weight:700}
 
   <div class="tabs" role="tablist">
     <button class="tab active" type="button" role="tab" id="tab-pools" aria-selected="true" aria-controls="panel-pools">Пулы ликвидности</button>
-    <a class="tab" href="../Revert Finance/index.html">Revert Finance</a>
+    <a class="tab" href="../revert/index.html">Revert Finance</a>
     <button class="tab" type="button" role="tab" id="tab-soon" aria-selected="false" aria-controls="panel-soon">Новые сервисы <span class="soon-mark">скоро</span></button>
   </div>
 
   <div id="panel-pools" role="tabpanel" aria-labelledby="tab-pools">
-    <div id="pools"></div>
+    <div id="pools"><section class="board"><div class="board-top"><div><h2>Доходность пулов BTC/STABLE <b>за 19.10–22.10</b></h2><p class="range">Диапазон позиции: 40 000–160 000 $</p></div><p class="ask">Где сейчас лучше доходность?</p></div><div class="table-scroll"><table><thead><tr><th>Платформа</th><th>Сеть</th><th>Пул ликвидности</th><th class="num">APR за период</th><th class="num">APR с 01.01</th></tr></thead><tbody><tr><td class="plat uniswap" rowspan="8">Uniswap</td><td class="chain ethereum" rowspan="4">Ethereum</td><td class="pool">WBTC/USDC v3 0,3%</td><td class="num best">4,06%</td><td class="num ">7,21%</td></tr><tr><td class="pool">WBTC/USDC v3 0,05%</td><td class="num ">2,62%</td><td class="num ">5,14%</td></tr><tr><td class="pool">WBTC/USDT v3 0,05%</td><td class="num ">3,00%</td><td class="num worst">4,95%</td></tr><tr><td class="pool">WBTC/USDT v3 0,3%</td><td class="num ">3,30%</td><td class="num ">6,34%</td></tr><tr><td class="chain base" rowspan="2">Base</td><td class="pool">cbBTC/USDC v3 0,05%</td><td class="num ">3,06%</td><td class="num ">6,17%</td></tr><tr><td class="pool">cbBTC/USDC v3 0,3%</td><td class="num ">3,51%</td><td class="num best">7,44%</td></tr><tr><td class="chain arbitrum" rowspan="2">Arbitrum</td><td class="pool">WBTC/USDC v3 0,05%</td><td class="num ">3,00%</td><td class="num ">5,72%</td></tr><tr><td class="pool">WBTC/USDC v3 0,3%</td><td class="num ">3,65%</td><td class="num ">6,22%</td></tr><tr><td class="plat aerodrome" rowspan="2">Aerodrome</td><td class="chain base" rowspan="2">Base</td><td class="pool">cbBTC/USDC CL100 (стейк)<span class="badge">AERO</span></td><td class="num worst">1,91%</td><td class="num ">5,56%</td></tr><tr><td class="pool">cbBTC/USDC CL100 (без стейка)</td><td class="num ">3,69%</td><td class="num ">6,51%</td></tr></tbody></table></div><p class="foot">Виртуальная позиция на 10 000 $ в каждом пуле, открыта 01.01.2026. APR за период = доход / 10 000 $ × 365 / 3,39 суток. APR с 01.01 = сумма доходов / 10 000 $ × 365 / число дней. Ончейн-данные, без учёта IL и газа.</p></section></div>
   </div>
   <div id="panel-soon" role="tabpanel" aria-labelledby="tab-soon" hidden>
     <section class="soon-card">
@@ -192,6 +233,7 @@ td.worst{background:#4c0519;color:#fb7185;font-weight:700}
     return '';
   }
 
+  root.innerHTML = '';
   var groups = data.groups.slice().sort(function (a, b) {
     if (a.key === b.key) return 0;
     if (a.key === 'BTC') return -1;
